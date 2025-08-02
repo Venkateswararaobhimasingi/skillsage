@@ -1,7 +1,8 @@
 // src/components/three/ParticlesBackground.tsx
 
 import { useCallback } from "react";
-import Particles from "react-particles";
+import Particles from "@tsparticles/react"; // ✅ This is the right package
+
 import type { Engine, Container } from "tsparticles-engine";
 import { loadSlim } from "tsparticles-slim";
 
