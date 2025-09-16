@@ -15,8 +15,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    path('api/', include('dj_rest_auth.urls')),  # Login/logout
+    path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
+
+    # Add this line 👇 to enable social login like Google
+    path('api/auth/', include('allauth.socialaccount.urls')),
+    path("accounts/", include("allauth.urls")),
+    path('', include('core.urls')),
+    #path("password-reset-confirm/<uidb64>/<token>/", auth_views.PasswordResetConfirmView.as_view(), name="password_reset_confirm")
 ]

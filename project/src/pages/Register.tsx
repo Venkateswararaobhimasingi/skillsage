@@ -22,11 +22,60 @@ export const Register = () => {
   const [loginForm, setLoginForm] = React.useState({ email: '', password: '' });
   const [showLoginPassword, setShowLoginPassword] = React.useState(false);
   const [isLogin, setIsLogin] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState('');
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Register:', formData);
+
+ const handleRegisterSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (formData.password !== formData.confirmPassword) {
+    setErrorMessage("Passwords and confirm password do not match.");
+    alert("Passwords and confirm password do not match.");
+    return;
+  }
+
+  setErrorMessage("");
+  try {
+  const response = await fetch("http://localhost:8000/register/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      username: formData.name,
+      email: formData.email,
+      password: formData.password,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (response.ok) {
+    localStorage.setItem('access_token', data.access);
+    localStorage.setItem('refresh_token', data.refresh);
+
+    alert("Account created successfully!");
+    setIsLogin(true);
+
+    // ✅ Redirect if `redirect_url` is returned
+    if (data.redirect_url) {
+      window.location.href = data.redirect_url;
+    } else {
+      window.location.href = "http://localhost:5173/"; // fallback
+    }
+
+  } else {
+    alert("Registration error: " + JSON.stringify(data));
+  }
+} catch (error) {
+  console.error("Error registering user:", error);
+}
   };
+const handleGoogleLogin = () => {
+  window.location.href = "http://127.0.0.1:8000/accounts/google/login/";
+  setIsLogin(true);
+};
+
+
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +191,7 @@ export const Register = () => {
               </div>
 
               {/* Google Button */}
-              <Button variant="outline" className="w-full" size="lg">
+              <Button variant="outline" className="w-full" size="lg" onClick={handleGoogleLogin}>
                 <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"

@@ -26,34 +26,42 @@ export function ForgotPassword() {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setMessage('');
-    setError('');
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  setMessage('');
+  setError('');
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email address.');
-      setIsSubmitting(false);
-      return;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setError('Please enter a valid email address.');
+    setIsSubmitting(false);
+    return;
+  }
+
+  try {
+    const response = await fetch('http://127.0.0.1:8000/password-reset/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      setMessage('If an account with that email exists, a reset link has been sent.');
+      setEmail('');
+    } else {
+      setError(data?.detail || 'Failed to send reset link.');
     }
+  } catch (apiError) {
+    setError('An unexpected error occurred. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const success = Math.random() > 0.2;
-
-      if (success) {
-        setMessage('If an account with that email exists, a reset link has been sent.');
-        setEmail('');
-      } else {
-        setError('Failed to send reset link. Please try again later.');
-      }
-    } catch (apiError) {
-      setError('An unexpected error occurred. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <div className="relative min-h-screen overflow-hidden">

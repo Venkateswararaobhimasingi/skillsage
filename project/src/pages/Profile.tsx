@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { User, Mail, Lock, Save, Camera, Award, Calendar, MapPin } from 'lucide-react'
+import { User, Save, Camera, Award } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,28 +9,85 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export function Profile() {
   const [formData, setFormData] = React.useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    location: 'San Francisco, CA',
-    title: 'Senior Frontend Developer',
-    experience: '5 years',
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    name: '',
+    email: '',
+    phone: '',
+    location: '',
+    title: '',
+    experience: '',
   })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log('Profile updated:', formData)
-  }
-
+const [profileImage, setProfileImage] = React.useState<string>('');
   const achievements = [
     { title: 'Interview Master', description: 'Completed 50+ mock interviews', date: '2024' },
     { title: 'Resume Expert', description: 'Optimized resume with 95% score', date: '2024' },
     { title: 'Learning Streak', description: '30 days of consistent learning', date: '2024' },
     { title: 'Skill Builder', description: 'Mastered 5 new technologies', date: '2024' }
   ]
+
+  // Fetch current profile
+  useEffect(() => {
+  fetch('http://127.0.0.1:8000/profile/', {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      setFormData({
+        name: data.name || '',
+        email: data.email || '',
+        phone: data.phone || '',
+        location: data.location || '',
+        title: data.title || '',
+        experience: data.experience || '',
+      })
+    })
+    .catch((err) => console.error('Error fetching profile:', err))
+}, [])
+
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault()
+  fetch('http://127.0.0.1:8000/profile/', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+    },
+    body: JSON.stringify(formData),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      console.log('Profile updated:', data)
+    })
+    .catch((err) => console.error('Error updating profile:', err))
+}
+const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (!e.target.files) return;
+  const file = e.target.files[0];
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  try {
+    const res = await fetch("http://127.0.0.1:8000/upload-profile-picture/", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) throw new Error("Failed to upload image");
+
+    const data = await res.json();
+    if (data.profile_image) {
+      setProfileImage(data.profile_image); // update state immediately
+    }
+  } catch (err) {
+    console.error("Error uploading image:", err);
+  }
+};
+
 
   return (
     <div className="min-h-screen p-6">
@@ -49,7 +106,6 @@ export function Profile() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Profile Info */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Basic Information */}
             <Card>
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>
@@ -72,7 +128,7 @@ export function Profile() {
                         id="email"
                         type="email"
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        disabled // read-only
                       />
                     </div>
                   </div>
@@ -107,7 +163,10 @@ export function Profile() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="experience">Experience Level</Label>
-                      <Select value={formData.experience} onValueChange={(value) => setFormData({ ...formData, experience: value })}>
+                      <Select
+                        value={formData.experience}
+                        onValueChange={(value) => setFormData({ ...formData, experience: value })}
+                      >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -127,93 +186,6 @@ export function Profile() {
                     Save Changes
                   </Button>
                 </form>
-              </CardContent>
-            </Card>
-
-            {/* Password Change */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Change Password</CardTitle>
-                <CardDescription>Update your password to keep your account secure</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input
-                      id="currentPassword"
-                      type="password"
-                      value={formData.currentPassword}
-                      onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="newPassword">New Password</Label>
-                      <Input
-                        id="newPassword"
-                        type="password"
-                        value={formData.newPassword}
-                        onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm Password</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        value={formData.confirmPassword}
-                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <Button variant="outline">
-                    <Lock className="mr-2 h-4 w-4" />
-                    Update Password
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Profile Picture */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Picture</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center space-y-4">
-                <div className="w-32 h-32 mx-auto bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
-                  <User className="h-16 w-16 text-white" />
-                </div>
-                <Button variant="outline" size="sm">
-                  <Camera className="mr-2 h-4 w-4" />
-                  Change Photo
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Achievements */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Achievements</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {achievements.map((achievement, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <div className="p-2 bg-primary/10 rounded-full">
-                      <Award className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">{achievement.title}</p>
-                      <p className="text-xs text-muted-foreground">{achievement.description}</p>
-                      <p className="text-xs text-muted-foreground">{achievement.date}</p>
-                    </div>
-                  </div>
-                ))}
               </CardContent>
             </Card>
 
@@ -239,6 +211,64 @@ export function Profile() {
                   <span className="text-sm">Member Since</span>
                   <span className="font-medium">Jan 2024</span>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Profile Picture */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile Picture</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center space-y-4">
+                {profileImage ? (
+                  <img
+                    src={profileImage}
+                    alt="Profile"
+                    className="w-32 h-32 mx-auto rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-32 h-32 mx-auto bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+                    <User className="h-16 w-16 text-white" />
+                  </div>
+                )}
+
+                <Button variant="outline" size="sm" onClick={() => document.getElementById("profileImageInput")?.click()}>
+                  <Camera className="mr-2 h-4 w-4" />
+                  Change Photo
+                </Button>
+                <input
+                  id="profileImageInput"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </CardContent>
+            </Card>
+
+
+
+            {/* Achievements */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Achievements</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {achievements.map((achievement, index) => (
+                  <div key={index} className="flex items-start space-x-3">
+                    <div className="p-2 bg-primary/10 rounded-full">
+                      <Award className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{achievement.title}</p>
+                      <p className="text-xs text-muted-foreground">{achievement.description}</p>
+                      <p className="text-xs text-muted-foreground">{achievement.date}</p>
+                    </div>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </div>

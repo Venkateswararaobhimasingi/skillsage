@@ -18,10 +18,37 @@ export function Login() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [formData, setFormData] = React.useState({ email: '', password: '' });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Login:', formData);
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  try {
+    const response = await fetch('http://127.0.0.1:8000/login/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Save token to localStorage or cookie
+      localStorage.setItem('access_token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
+
+      // Redirect to dashboard or homepage
+      window.location.href = 'http://localhost:5173/'; // or navigate('/dashboard')
+    } else {
+      alert(data.detail || 'Login failed');
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    alert('Something went wrong. Please try again.');
+  }
+};
+const handleGoogleLogin = () => {
+  window.location.href = "http://127.0.0.1:8000/accounts/google/login/";
+};
+
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen w-full overflow-hidden">
@@ -120,7 +147,8 @@ export function Login() {
                 </div>
               </div>
 
-              <Button variant="outline" className="w-full" size="lg">
+              <Button variant="outline" className="w-full" size="lg" onClick={handleGoogleLogin}>
+                
                 <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"

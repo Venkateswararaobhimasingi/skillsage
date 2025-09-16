@@ -37,7 +37,51 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'core.apps.CoreConfig',  # Assuming you have a core app
+    'rest_framework',
+    'rest_framework.authtoken',
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    'django.contrib.sites',
+    'corsheaders',
+    'rest_framework_simplejwt.token_blacklist',
+
 ]
+AUTH_USER_MODEL = 'core.AppUser'
+# dj-rest-auth + allauth settings
+SITE_ID = 1
+SOCIALACCOUNT_LOGIN_ON_GET = True 
+SOCIALACCOUNT_AUTO_SIGNUP = True
+ACCOUNT_USER_MODEL_USERNAME_FIELD = "username"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+SOCIALACCOUNT_QUERY_EMAIL = True
+ACCOUNT_ADAPTER = "core.adapters.NoNewUserSignupAccountAdapter"
+SOCIALACCOUNT_ADAPTER = "core.adapters.NoSignupSocialAccountAdapter"
+
+
+
+REST_USE_JWT = True
+# Redirect to React login page after login or signup
+LOGIN_REDIRECT_URL = 'http://127.0.0.1:8000/google/token/'  # Will handle token generation
+
+
+ACCOUNT_LOGOUT_REDIRECT_URL = "http://localhost:5173/login"  # optional
+
+# JWT token settings (optional customization)
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}   
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -47,8 +91,19 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # If you are using CORS
+   
+    'allauth.account.middleware.AccountMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+
 ]
 
+GOOGLE_CLIENT_ID = '255011526640-9ge03b7a43g20c0232nuqgf5g55paadd.apps.googleusercontent.com'
+CORS_ALLOW_ALL_ORIGINS = True 
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173"
+]
 ROOT_URLCONF = 'skillsageai.urls'
 
 TEMPLATES = [
@@ -69,6 +124,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'skillsageai.wsgi.application'
 
+IMGUR_CLIENT_ID = "b2120d536b887bc"
+IMGUR_CLIENT_SECRET = "6c527bb3204d5ba4e81f488f49a4d78949beb076"
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -110,6 +167,29 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
+
+# settings.py
+
+DJ_REST_AUTH = {
+    "PASSWORD_RESET_CONFIRM_URL": "reset-password?uid={uid}&token={token}",
+    "PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND": True,
+}
+from datetime import timedelta
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=20),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,  # optional, issues new refresh token every time
+    "BLACKLIST_AFTER_ROTATION": True,
+}
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'healhaven19773@gmail.com'
+EMAIL_HOST_PASSWORD = 'akzc pxta bexu jjgk'
 
 
 # Static files (CSS, JavaScript, Images)
