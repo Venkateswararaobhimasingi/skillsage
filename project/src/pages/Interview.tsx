@@ -1,12 +1,10 @@
-// Interview.tsx
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import InterviewSession from './InterviewSession.tsx'; // Import the InterviewSession component
-import { useNavigate, useLocation } from 'react-router-dom'; // Import useNavigate and useLocation
+import InterviewSession from './InterviewSession.tsx';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-// Data for interview topics with added imageUrls
 const interviewTopics = [
   { value: 'frontend', label: 'Frontend Development', description: 'HTML, CSS, JavaScript, React, etc.', imageUrl: 'https://placehold.co/600x400/1a1a1a/FFFFFF/png?text=Frontend' },
   { value: 'backend', label: 'Backend Development', description: 'Node.js, Python, Java, Databases, etc.', imageUrl: 'https://placehold.co/600x400/1a1a1a/FFFFFF/png?text=Backend' },
@@ -20,21 +18,18 @@ const interviewTopics = [
   { value: 'system-design', label: 'System Design', description: 'Scalability, Architecture, Distributed Systems.', imageUrl: 'https://placehold.co/600x400/1a1a1a/FFFFFF/png?text=System+Design' },
 ];
 
-// Main Interview component that handles both selection and session views
 export default function Interview() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // State to manage the current view: 'selection' or 'interview'
-  // Initialize view based on URL query parameter
-  const [view, setView] = useState<'selection' | 'interview'>(() => {
+  const [view, setView] = useState<'selection' | 'difficulty' | 'interview'>(() => {
     const params = new URLSearchParams(location.search);
     return params.get('session') === 'true' ? 'interview' : 'selection';
   });
-  // State to store the selected interview topic
-  const [selectedTopic, setSelectedTopic] = useState('');
 
-  // Effect to update URL when view changes
+  const [selectedTopic, setSelectedTopic] = useState('');
+  const [selectedDifficulty, setSelectedDifficulty] = useState('');
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (view === 'interview') {
@@ -42,42 +37,35 @@ export default function Interview() {
     } else {
       params.delete('session');
     }
-    // Use replace: true to avoid adding multiple entries to history for view changes
     navigate(`${location.pathname}?${params.toString()}`, { replace: true });
   }, [view, navigate, location.pathname, location.search]);
 
-  /**
-   * Handles the selection of an interview topic from the cards.
-   * Sets the selected topic and switches the view to the interview session.
-   * @param topicValue The value of the selected topic (e.g., 'frontend').
-   */
   const handleSelectInterview = (topicValue: string) => {
     setSelectedTopic(topicValue);
-    setView('interview'); // This will trigger the useEffect to update the URL
+    setView('difficulty'); // Show difficulty selection first
   };
 
-  /**
-   * Handles going back to the interview selection screen.
-   * Resets the selected topic and switches the view to selection.
-   */
+  const handleSelectDifficulty = (difficulty: string) => {
+    setSelectedDifficulty(difficulty);
+    setView('interview'); // Navigate to interview session
+  };
+
   const handleGoBackToSelection = () => {
     setSelectedTopic('');
-    setView('selection'); // This will trigger the useEffect to update the URL
+    setSelectedDifficulty('');
+    setView('selection');
   };
 
   return (
     <div className="min-h-screen bg-black text-white font-inter antialiased">
-      {view === 'selection' ? (
-        // Interview Selection View
+      {view === 'selection' && (
         <motion.div
           className="container mx-auto px-4 py-12"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-4xl font-extrabold text-center mb-4 text-white">
-            Choose Your Interview
-          </h1>
+          <h1 className="text-4xl font-extrabold text-center mb-4 text-white">Choose Your Interview</h1>
           <p className="text-xl text-center text-gray-300 mb-10">
             Select a topic to start your AI-powered mock interview session.
           </p>
@@ -86,26 +74,21 @@ export default function Interview() {
             {interviewTopics.map((topic) => (
               <motion.div
                 key={topic.value}
-                whileHover={{ scale: 1.03, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1)' }}
+                whileHover={{ scale: 1.03, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3),0 4px 6px -2px rgba(0,0,0,0.1)' }}
                 whileTap={{ scale: 0.98 }}
                 className="cursor-pointer"
                 onClick={() => handleSelectInterview(topic.value)}
               >
                 <Card className="h-full flex flex-col justify-between rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out bg-gray-800 border border-gray-700 text-white overflow-hidden">
-                  {/* Image added here */}
                   <img
                     src={topic.imageUrl}
                     alt={topic.label}
                     className="w-full h-40 object-cover rounded-t-xl"
-                    onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x400/333333/FFFFFF?text=Image+Error'; }} // Fallback image
+                    onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x400/333333/FFFFFF?text=Image+Error'; }}
                   />
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-xl font-semibold text-white">
-                      {topic.label} Interview
-                    </CardTitle>
-                    <CardDescription className="text-gray-400 mt-1">
-                      {topic.description}
-                    </CardDescription>
+                    <CardTitle className="text-xl font-semibold text-white">{topic.label} Interview</CardTitle>
+                    <CardDescription className="text-gray-400 mt-1">{topic.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-0">
                     <Button
@@ -120,10 +103,38 @@ export default function Interview() {
             ))}
           </div>
         </motion.div>
-      ) : (
-        // Interview Session View
+      )}
+
+      {view === 'difficulty' && (
+        <motion.div
+          className="flex flex-col items-center justify-center min-h-screen px-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="text-3xl font-bold mb-6 text-white">Choose Difficulty Level</h2>
+          <div className="flex space-x-4">
+            {['Easy', 'Medium', 'Hard'].map((level) => (
+              <Button
+                key={level}
+                className="px-6 py-3 text-lg font-semibold"
+                variant="outline"
+                onClick={() => handleSelectDifficulty(level.toLowerCase())}
+              >
+                {level}
+              </Button>
+            ))}
+          </div>
+          <Button className="mt-6" variant="ghost" onClick={handleGoBackToSelection}>
+            Back
+          </Button>
+        </motion.div>
+      )}
+
+      {view === 'interview' && (
         <InterviewSession
           selectedTopic={selectedTopic}
+          selectedDifficulty={selectedDifficulty}
           onGoBack={handleGoBackToSelection}
         />
       )}

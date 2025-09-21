@@ -43,7 +43,7 @@ class RegisterView(APIView):
             serializer.save()
             return Response({
                 "message": "User created successfully",
-                "redirect_url": "http://localhost:5173/"
+                "redirect_url": "http://localhost:5173/dashboard"
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

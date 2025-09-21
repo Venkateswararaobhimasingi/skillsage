@@ -11,7 +11,7 @@ import { Resume } from '@/pages/Resume';
 import { Learning } from '@/pages/Learning';
 import { Profile } from '@/pages/Profile';
 import { ForgotPassword } from './pages/ForgotPassword';
-import RocketCursor from './components/ui/RocketCursor';
+import VoiceApp from "./pages/VoiceApp";
 import { About } from './pages/About';
 import { Contact } from './pages/Contact';
 import PrivateRoute from './pages/PrivateRoute';
@@ -25,7 +25,7 @@ function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="skillsage-theme">
       <Router>
-        <RocketCursor />
+       
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
@@ -40,7 +40,7 @@ function App() {
             <Route path="/google-auth" element={<GoogleAuth />} />
             
             <Route path="/logout" element={<Logout />} /> 
-            
+            <Route path="/voice" element={<VoiceApp />} /> 
             <Route path="interview" element={<PrivateRoute><Interview /></PrivateRoute>} />
             {/* CORRECTED: Changed :roomId to :topic to match InterviewRoom's useParams */}
             <Route path="interview-room/:topic" element={<PrivateRoute><InterviewRoom /></PrivateRoute>} />
